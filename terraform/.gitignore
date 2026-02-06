@@ -1,0 +1,39 @@
+# Terraform local values and ignore patterns
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+.tfvars
+!terraform.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.DS_Store
+*.sw[op]
+*~
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# Plan files
+*.tfplan
+
+# Secrets
+secrets.tfvars
+*.pem
+*.key
