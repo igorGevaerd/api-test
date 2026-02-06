@@ -98,12 +98,15 @@ jobs:
 
     - name: Check formatting
       run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "❌ Code is not formatted. Run 'make fmt' to fix."
-          gofmt -s -d .
+        # Format all Go files
+        gofmt -s -w .
+        # Check if there are any unformatted files
+        if git diff --quiet; then
+          echo "✅ Code is properly formatted"
+        else
+          echo "❌ Code formatting issues found. Formatting automatically..."
           exit 1
         fi
-        echo "✅ Code is properly formatted"
 
   vet:
     name: Go Vet
