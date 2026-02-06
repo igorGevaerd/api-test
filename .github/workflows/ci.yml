@@ -1,0 +1,121 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache: true
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run tests
+      run: go test -v -race -timeout 10m ./...
+
+    - name: Run tests with coverage
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Upload coverage reports
+      if: matrix.go-version == '1.21'
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        cache: true
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=5m
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        cache: true
+
+    - name: Build
+      run: |
+        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -o api-bin ./cmd/api
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-binary
+        path: api-bin
+        retention-days: 5
+
+  fmt:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Check formatting
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "❌ Code is not formatted. Run 'make fmt' to fix."
+          gofmt -s -d .
+          exit 1
+        fi
+        echo "✅ Code is properly formatted"
+
+  vet:
+    name: Go Vet
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run go vet
+      run: go vet ./...
