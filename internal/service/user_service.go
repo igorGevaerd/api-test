@@ -55,7 +55,7 @@ func (s *UserService) GetAll(ctx context.Context) ([]model.User, error) {
 	// Cache the result for 5 minutes
 	if len(users) > 0 {
 		usersJSON, _ := json.Marshal(users)
-		s.cache.Set(ctx, "all_users", string(usersJSON), 5*time.Minute)
+		_ = s.cache.Set(ctx, "all_users", string(usersJSON), 5*time.Minute)
 	}
 
 	return users, nil
@@ -95,7 +95,7 @@ func (s *UserService) GetByID(ctx context.Context, id string) (*model.User, erro
 
 	// Cache the result for 10 minutes
 	userJSON, _ := json.Marshal(user)
-	s.cache.Set(ctx, cacheKey, string(userJSON), 10*time.Minute)
+	_ = s.cache.Set(ctx, cacheKey, string(userJSON), 10*time.Minute)
 
 	return &user, nil
 }
@@ -120,7 +120,7 @@ func (s *UserService) Create(ctx context.Context, user *model.User) error {
 	user.UpdatedAt = now
 
 	// Invalidate cache
-	s.cache.Delete(ctx, "all_users")
+	_ = s.cache.Delete(ctx, "all_users")
 
 	return nil
 }
