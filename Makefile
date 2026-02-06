@@ -104,3 +104,93 @@ dev-setup: install-deps build docker-up
 # Run all checks: format, lint, test
 check: fmt lint test
 	@echo "✓ All checks passed"
+# Terraform targets
+.PHONY: tf-init tf-plan tf-apply tf-destroy tf-validate tf-fmt tf-output tf-state tf-cost
+
+# Terraform: Initialize (dev environment)
+tf-init:
+	cd terraform/environments/dev && terraform init
+
+# Terraform: Plan deployment (dev environment)
+tf-plan:
+	cd terraform/environments/dev && terraform plan -out=tfplan
+
+# Terraform: Apply deployment (dev environment)
+tf-apply:
+	cd terraform/environments/dev && terraform apply tfplan
+
+# Terraform: Destroy infrastructure (dev environment)
+tf-destroy:
+	cd terraform/environments/dev && terraform destroy
+
+# Terraform: Validate configuration
+tf-validate:
+	terraform -chdir=terraform validate
+
+# Terraform: Format code
+tf-fmt:
+	terraform fmt -recursive terraform/
+
+# Terraform: View outputs
+tf-output:
+	cd terraform/environments/dev && terraform output
+
+# Terraform: View state
+tf-state:
+	cd terraform/environments/dev && terraform state list
+
+# Terraform: Estimate costs
+tf-cost:
+	@echo "Estimated costs:"
+	@echo "Dev: $50-80/month"
+	@echo "Prod: $200-400/month"
+
+# Terraform: Plan prod deployment
+tf-plan-prod:
+	cd terraform/environments/prod && terraform init && terraform plan -out=tfplan
+
+# Terraform: Apply prod deployment
+tf-apply-prod:
+	cd terraform/environments/prod && terraform apply tfplan
+
+# ECR: Login
+ecr-login:
+	@aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $$(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com
+	@echo "✓ Logged in to ECR"
+
+# ECR: Build and push image
+ecr-push: docker-build
+	@export ECR_URL=$$(cd terraform/environments/dev && terraform output -raw ecr_repository_url 2>/dev/null || echo ""); \
+	if [ -z "$$ECR_URL" ]; then \
+		echo "❌ ECR repository not found. Run 'make tf-apply' first."; \
+		exit 1; \
+	fi; \
+	docker tag api-server:latest $$ECR_URL:latest; \
+	docker push $$ECR_URL:latest; \
+	echo "✓ Image pushed to ECR"
+
+# ECS: Update service (trigger redeployment)
+ecs-deploy:
+	aws ecs update-service \
+		--cluster api-test-cluster \
+		--service api-test-service \
+		--force-new-deployment \
+		--region us-east-1
+	@echo "✓ ECS service updated"
+
+# AWS: Get ALB URL
+aws-alb-url:
+	@cd terraform/environments/dev && terraform output alb_url 2>/dev/null || echo "ALB not deployed"
+
+# AWS: View logs
+aws-logs:
+	aws logs tail /ecs/api-test-task --follow --region us-east-1
+
+# AWS: Check service status
+aws-status:
+	@aws ecs describe-services \
+		--cluster api-test-cluster \
+		--services api-test-service \
+		--region us-east-1 \
+		--query 'services[0].{Status:status,DesiredCount:desiredCount,RunningCount:runningCount}' \
+		--output table
