@@ -188,6 +188,12 @@ variable "log_retention_days" {
   default     = 30
 }
 
+variable "notification_email" {
+  description = "Email address for ElastiCache notifications"
+  type        = string
+  default     = "alerts@example.com"
+}
+
 variable "tags" {
   description = "Additional tags"
   type        = map(string)
