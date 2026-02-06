@@ -21,10 +21,7 @@ resource "aws_elasticache_cluster" "redis" {
   subnet_group_name          = aws_elasticache_subnet_group.main.name
   security_group_ids         = [aws_security_group.elasticache.id]
   
-  automatic_failover_enabled = var.environment == "prod" ? true : false
-  multi_az_enabled           = var.environment == "prod" ? true : false
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = false
+  transit_encryption_enabled = true
   
   snapshot_retention_limit = var.environment == "prod" ? 5 : 0
   snapshot_window          = "03:00-05:00"
@@ -34,7 +31,7 @@ resource "aws_elasticache_cluster" "redis" {
     destination      = aws_cloudwatch_log_group.redis.name
     destination_type = "cloudwatch-logs"
     log_format       = "json"
-    enabled          = true
+    log_type         = "engine-log"
   }
 
   notification_topic_arn = aws_sns_topic.elasticache_notifications.arn
@@ -76,5 +73,5 @@ resource "aws_sns_topic" "elasticache_notifications" {
 resource "aws_sns_topic_subscription" "elasticache_notifications" {
   topic_arn = aws_sns_topic.elasticache_notifications.arn
   protocol  = "email"
-  endpoint  = "your-email@example.com"
+  endpoint  = var.notification_email
 }

@@ -17,7 +17,7 @@ resource "aws_db_instance" "postgres" {
   allocated_storage       = var.rds_allocated_storage
   storage_type            = "gp3"
   storage_encrypted       = true
-  kms_key_id              = aws_kms_key.rds.arn
+  kms_key_id              = aws_kms_key.rds.id
 
   db_name  = var.rds_database_name
   username = var.rds_username
@@ -27,20 +27,16 @@ resource "aws_db_instance" "postgres" {
   vpc_security_group_ids          = [aws_security_group.rds.id]
   publicly_accessible             = false
   skip_final_snapshot             = var.environment == "dev" ? true : false
-  final_snapshot_identifier       = var.environment == "dev" ? null : "${var.app_name}-postgres-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
+  final_snapshot_identifier       = var.environment == "dev" ? null : "${var.app_name}-postgres-final-snapshot"
   deletion_protection             = var.environment == "prod" ? true : false
   backup_retention_period         = var.environment == "prod" ? 30 : 7
   backup_window                   = "03:00-04:00"
   maintenance_window              = "sun:04:00-sun:05:00"
   multi_az                        = var.environment == "prod" ? true : false
   
-  enable_cloudwatch_logs_exports = ["postgresql"]
-  enable_iam_database_authentication = true
-
-  parameters {
-    name  = "log_statement"
-    value = "all"
-  }
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+  iam_database_authentication_enabled = true
+  parameter_group_name = aws_db_parameter_group.postgres.name
 
   tags = {
     Name = "${var.app_name}-postgres"
