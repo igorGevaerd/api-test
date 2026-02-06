@@ -53,7 +53,7 @@ jobs:
         cache: true
 
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v4
       with:
         version: latest
         args: --timeout=5m
@@ -76,7 +76,7 @@ jobs:
       run: go build -v -o api-bin ./cmd/api
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: api-binary
         path: api-bin
