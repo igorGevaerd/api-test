@@ -11,8 +11,7 @@ import (
 
 // Client is a wrapper around Redis client.
 type Client struct {
-	client    *redis.Client
-	Underlying *redis.Client // For testing purposes
+	client *redis.Client
 }
 
 // New creates a new Redis cache client.
@@ -30,7 +29,7 @@ func New(host, port string) *Client {
 	}
 
 	log.Println("✓ Connected to Redis")
-	return &Client{client: client, Underlying: client}
+	return &Client{client: client}
 }
 
 // Get retrieves a value from cache.

@@ -16,12 +16,13 @@ import (
 	"api-test/internal/service"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // setupTestDB initializes an in-memory SQLite database for testing.
 func setupTestDB(t *testing.T) *sql.DB {
 	// Using SQLite for testing instead of PostgreSQL
-	testDB, err := sql.Open("sqlite", ":memory:")
+	testDB, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("Failed to open test database: %v", err)
 	}
@@ -43,6 +44,11 @@ func setupTestDB(t *testing.T) *sql.DB {
 	return testDB
 }
 
+// createMockCache creates a mock cache client for testing.
+func createMockCache() *cache.Client {
+	return &cache.Client{}
+}
+
 // setupTestRedis initializes a mock Redis client for testing.
 func setupTestRedis(t *testing.T) *cache.Client {
 	// Connect to Redis (ensure Redis is running for tests)
@@ -59,7 +65,7 @@ func setupTestRedis(t *testing.T) *cache.Client {
 		// Tests will continue but Redis caching tests may be skipped
 	}
 
-	return &cache.Client{Underlying: redisClient}
+	return &cache.Client{}
 }
 
 // TestHealthCheck tests the health check endpoint.
@@ -94,7 +100,7 @@ func TestGetUsersEmpty(t *testing.T) {
 	defer testDB.Close()
 
 	// Mock Redis cache
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -131,7 +137,7 @@ func TestCreateUser(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -183,7 +189,7 @@ func TestCreateUserMissingFields(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -243,7 +249,7 @@ func TestCreateUserInvalidJSON(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -268,7 +274,7 @@ func TestGetUserNotFound(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -301,7 +307,7 @@ func TestGetUserMissingID(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -334,7 +340,7 @@ func TestGetUserFound(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)
@@ -380,7 +386,7 @@ func TestContentType(t *testing.T) {
 	testDB := setupTestDB(t)
 	defer testDB.Close()
 
-	mockCache := &cache.Client{Underlying: redis.NewClient(&redis.Options{Addr: "localhost:6379"})}
+	mockCache := createMockCache()
 
 	userService := service.New(testDB, mockCache)
 	userHandler := handler.New(userService)

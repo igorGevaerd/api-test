@@ -80,8 +80,9 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // Create handles POST requests to /users and creates a new user.
 //
 // Request Body:
-//   Expects JSON with fields: name, email
-//   Example: {"name":"Charlie","email":"charlie@example.com"}
+//
+//	Expects JSON with fields: name, email
+//	Example: {"name":"Charlie","email":"charlie@example.com"}
 //
 // HTTP Response:
 //   - Status 201: Successfully created user, returns the created user as JSON
