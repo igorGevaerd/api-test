@@ -1,0 +1,22 @@
+run:
+  timeout: 5m
+  tests: true
+  build-tags: []
+
+linters:
+  enable:
+    - vet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - typecheck
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - unused
+  max-issues-per-linter: 0
+  max-same-issues: 0
