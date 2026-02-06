@@ -9,7 +9,7 @@ terraform {
   }
 
   cloud {
-    organization = "your-organization"
+    organization = "my-organization"
 
     workspaces {
       name = "api-test"
